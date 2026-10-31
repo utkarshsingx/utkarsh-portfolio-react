@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Utkarsh Singh — Platform Engineer · Multi-tenant LMS &amp; AI systems</title>
+    <meta
+      name="description"
+      content="Utkarsh Singh builds the backends behind multi-tenant learning platforms — Django, NestJS, assessment engines, AI tutors and the deploy paths under them. Greater Noida, India."
+    />
+    <link rel="canonical" href="https://utkarshsingx.github.io/" />
+    <meta name="author" content="Utkarsh Singh" />
+    <meta name="theme-color" content="#08090b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Utkarsh Singh — Platform Engineer" />
+    <meta
+      property="og:description"
+      content="Multi-tenant platforms, assessment engines and AI systems. Three products in parallel, shipped from schema to deploy."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@utkarshsingx" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Resolve the theme BEFORE first paint, or the page flashes dark then
+      // repaints light for anyone who chose light. Mirrors useTheme()'s rules.
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var prefersLight =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+          var theme = saved === "light" || saved === "dark" ? saved : prefersLight ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          /* private mode / storage disabled — the dark default in the markup stands */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="padding: 2rem; font-family: system-ui">
+        This portfolio renders with React. Source and a no-JavaScript version of the same material
+        live at <a href="https://github.com/utkarshsingx">github.com/utkarshsingx</a>.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

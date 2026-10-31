@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   This is a PLAIN `@theme` block, deliberately not `@theme inline`: a plain
+   block emits every token as a real `:root` custom property and compiles each
+   utility to `var(--token)`. That is what makes the light theme below a
+   nine-line override instead of a second set of classes — re-declare the
+   tokens and every `bg-surface`, `text-ink-2` and `border-line` beneath them
+   re-themes itself, opacity modifiers included.
+
+   Font tokens are named `--font-ui / --font-code / --font-quote` rather than
+   `--font-sans / --font-serif / --font-mono`, because those three are Tailwind
+   v4 built-ins — redeclaring them creates a custom-property cycle that still
+   renders a plausible-looking fallback face, so the bug is invisible.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #08090b;
+  --color-surface: #0f1216;
+  --color-surface-2: #151a1f;
+  --color-ink: #f5f3ef;
+  --color-ink-2: #b4b2ac;
+  --color-ink-3: #8b8983;
+  /* Two hairline tones, because one cannot do both jobs. `line`/`line-2` draw
+     dividers and container edges, which WCAG 1.4.11 exempts as decoration.
+     `control` draws the boundary of an interactive control, where the border
+     IS the only visual indication and 3:1 is required — holding the dividers
+     to that bar would force a much louder page for no accessibility gain. */
+  --color-line: #f5f3ef1f;
+  --color-line-2: #f5f3ef12;
+  --color-control: #f5f3ef5c;
+  --color-accent: #ff5c28;
+  --color-accent-ink: #140600;
+  --color-pulse: #c8ff5e;
+
+  --font-ui: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-quote: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Light theme. `:root[data-theme]` (0,1,1) outranks the `:root` (0,1,0) that
+   `@theme` writes to, so these win without `!important`.
+   Every pair below is gated by `npm run check:contrast`. */
+:root[data-theme="light"] {
+  --color-bg: #f7f5f0;
+  --color-surface: #ffffff;
+  --color-surface-2: #efece4;
+  --color-ink: #15181c;
+  --color-ink-2: #4b4f55;
+  --color-ink-3: #5f646b;
+  --color-line: #15181c26;
+  --color-line-2: #15181c14;
+  --color-control: #15181c80;
+  --color-accent: #c2340a;
+  --color-accent-ink: #ffffff;
+  --color-pulse: #3f6407;
+}
+
+@custom-variant light-mode (:root[data-theme="light"] &);
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    color-scheme: dark;
+    --nav-h: 60px;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  html {
+    /* scroll-padding keeps an anchored heading clear of the sticky nav */
+    scroll-padding-top: calc(var(--nav-h) + 24px);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-ui);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Tabular figures belong in columns of numbers, not on display values —
+     at hero sizes a `0`-width digit makes `121` look loose. */
+  th,
+  td,
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll reveal — deliberately TRANSFORM ONLY. No opacity.
+
+   Two decisions here, both the result of measuring rather than taste.
+
+   1. It is a scroll-driven `view()` timeline, not an IntersectionObserver that
+      adds a class. An observer-driven reveal hides content permanently on
+      every path where the observer never fires — a deep anchor link that
+      jumps the element, a fast scroll, a failed bundle, an unsupported
+      browser. A view() timeline is a pure function of scroll position, so
+      there is no event left to miss.
+
+   2. It does not animate opacity, which the first draft did. Reading computed
+      opacity back out of a real browser showed all 18 reveals sitting at 0
+      while off-screen: correct for a reader scrolling down, and blank for a
+      full-page screenshot, an OG-image capture or any automated reader, all
+      of which render at scroll offset 0. A rise is enough motion. Content on
+      this page is never transparent, in any browser, at any scroll offset.
+
+   `animation-fill-mode: both` holds the end state once the range is past, so
+   nothing scrolled by stays nudged.
+--------------------------------------------------------------------------- */
+@keyframes reveal-in {
+  from {
+    transform: translateY(18px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}
+
+@media print {
+  .reveal {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+--------------------------------------------------------------------------- */
+/* Write ONLY the unprefixed property. Hand-writing `-webkit-backdrop-filter`
+   alongside it made Lightning CSS collapse the pair and emit the prefixed
+   form *alone*, so the compiled rule set `-webkit-backdrop-filter` and the
+   standard property resolved to `none` — a sticky nav you could read straight
+   through. Let the build add prefixes; it knows the targets.
+
+   The tint is 88%, not the 72% that looked right in isolation: backdrop-filter
+   is unsupported or switched off often enough (Firefox behind a flag,
+   forced-colors, some headless captures) that the nav has to stay opaque
+   enough to read against on its own. The blur is the garnish, not the
+   mechanism. */
+@utility glass {
+  background-color: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+/* A hairline that reads on both themes without a 1px border eating layout. */
+@utility rule-t {
+  border-top: 1px solid var(--color-line);
+}
+
+@utility shell {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 56px);
+}
+
+/* The faint engineering grid behind the hero. Decorative only — exempt from
+   the contrast gate, per WCAG 1.4.11. */
+@utility grid-field {
+  background-image: linear-gradient(to right, var(--color-line-2) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line-2) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: center;
+}
+
+@layer components {
+  .link-underline {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+    transition: text-decoration-color 180ms var(--ease-out-soft);
+  }
+  .link-underline:hover {
+    text-decoration-color: currentColor;
+  }
+}
