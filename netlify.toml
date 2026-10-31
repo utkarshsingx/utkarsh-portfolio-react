@@ -1,0 +1,23 @@
+# Build config lives in the repo so that linking this site to the GitHub
+# repository later (Netlify UI → Site configuration → Build & deploy) turns
+# every push into a deploy with no further setup.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Vite fingerprints everything under /assets, so those are safe to cache hard.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# No SPA catch-all on purpose: this is one page with in-page anchors, and a
+# rewrite-everything-to-index rule would answer 200 for URLs that do not exist.
